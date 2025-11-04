@@ -2,6 +2,8 @@ package com.firstapp.myapplication.network
 
 import com.firstapp.myapplication.auth.TokenManager
 import com.firstapp.myapplication.network.api.AuthApiService
+import com.firstapp.myapplication.network.api.ProfileApiService
+import com.firstapp.myapplication.network.api.ScheduleApiService
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -49,6 +51,8 @@ object ApiClient {
         .client(okHttpClient)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
-    
+
     val authService: AuthApiService = retrofit.create(AuthApiService::class.java)
+    val profileService: ProfileApiService = retrofit.create(ProfileApiService::class.java)
+    val scheduleService: ScheduleApiService = retrofit.create(ScheduleApiService::class.java)
 }

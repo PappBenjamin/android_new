@@ -1,16 +1,124 @@
 package com.firstapp.myapplication.network.models
 
+import com.google.gson.annotations.SerializedName
+
+// Response DTOs
 data class ScheduleResponseDto(
-    val id: String,
-    val habitName: String,
-    val habitIcon: String?,
-    val scheduledTime: String, // "HH:mm" format
-    val duration: Int?, // in minutes
-    val status: ScheduleStatus,
+    val id: Int,
+    val habitId: Int,
+    val habit: HabitResponseDto?,
+    @SerializedName("start_time")
+    val startTime: String,
+    @SerializedName("end_time")
+    val endTime: String?,
+    val date: String,
+    @SerializedName("duration_minutes")
+    val durationMinutes: Int?,
+    val status: String, // "Planned", "Completed", "Skipped"
+    @SerializedName("is_custom")
+    val isCustom: Boolean,
     val notes: String?,
+    val progress: List<ProgressResponseDto>?,
+    @SerializedName("participantIds")
+    val participantIds: List<Int>?,
+    @SerializedName("created_at")
+    val createdAt: String,
+    @SerializedName("updated_at")
+    val updatedAt: String
+)
+
+data class ProgressResponseDto(
+    val id: Int,
+    val scheduleId: Int,
+    val date: String,
+    @SerializedName("logged_time")
+    val loggedTime: Int?,
+    val notes: String?,
+    @SerializedName("is_completed")
     val isCompleted: Boolean,
-    val timeOfDay: TimeOfDay,
-    val habitColor: String? = null
+    @SerializedName("created_at")
+    val createdAt: String,
+    @SerializedName("updated_at")
+    val updatedAt: String
+)
+
+// Request DTOs for creating schedules
+data class CreateCustomScheduleRequest(
+    val habitId: Int,
+    val date: String,
+    @SerializedName("start_time")
+    val startTime: String,
+    @SerializedName("end_time")
+    val endTime: String? = null,
+    @SerializedName("duration_minutes")
+    val durationMinutes: Int? = null,
+    @SerializedName("is_custom")
+    val isCustom: Boolean = true,
+    @SerializedName("participantIds")
+    val participantIds: List<Int>? = null,
+    val notes: String? = null
+)
+
+data class CreateRecurringScheduleRequest(
+    val habitId: Int,
+    @SerializedName("start_time")
+    val startTime: String,
+    @SerializedName("repeat_pattern")
+    val repeatPattern: String, // "none", "daily", "weekdays", "weekends"
+    @SerializedName("is_custom")
+    val isCustom: Boolean = true,
+    @SerializedName("end_time")
+    val endTime: String? = null,
+    @SerializedName("duration_minutes")
+    val durationMinutes: Int? = null,
+    @SerializedName("repeat_days")
+    val repeatDays: Int = 30,
+    @SerializedName("participantIds")
+    val participantIds: List<Int>? = null,
+    val notes: String? = null
+)
+
+data class CreateWeekdayScheduleRequest(
+    val habitId: Int,
+    @SerializedName("start_time")
+    val startTime: String,
+    @SerializedName("days_of_week")
+    val daysOfWeek: List<Int>, // 1=Monday ... 7=Sunday
+    @SerializedName("number_of_weeks")
+    val numberOfWeeks: Int = 4,
+    @SerializedName("duration_minutes")
+    val durationMinutes: Int? = null,
+    @SerializedName("end_time")
+    val endTime: String? = null,
+    @SerializedName("participantIds")
+    val participantIds: List<Int>? = null,
+    val notes: String? = null
+)
+
+data class UpdateScheduleRequest(
+    @SerializedName("start_time")
+    val startTime: String? = null,
+    @SerializedName("end_time")
+    val endTime: String? = null,
+    @SerializedName("duration_minutes")
+    val durationMinutes: Int? = null,
+    val status: String? = null, // "Planned", "Completed", "Skipped"
+    val date: String? = null,
+    @SerializedName("is_custom")
+    val isCustom: Boolean? = null,
+    @SerializedName("participantIds")
+    val participantIds: List<Int>? = null,
+    val notes: String? = null
+)
+
+data class CreateProgressRequest(
+    val scheduleId: Int,
+    val date: String,
+    @SerializedName("logged_time")
+    val loggedTime: Int? = null,
+    val notes: String? = null,
+    @SerializedName("is_completed")
+    val isCompleted: Boolean? = null
 )
 
 enum class ScheduleStatus {
@@ -27,95 +135,5 @@ enum class TimeOfDay {
 
 // Sample data for testing
 object SampleScheduleData {
-    fun getSampleSchedules(): List<ScheduleResponseDto> = listOf(
-        // Morning
-        ScheduleResponseDto(
-            id = "1",
-            habitName = "Drink rum",
-            habitIcon = "🥃",
-            scheduledTime = "06:00",
-            duration = 5,
-            status = ScheduleStatus.COMPLETED,
-            notes = null,
-            isCompleted = true,
-            timeOfDay = TimeOfDay.MORNING,
-            habitColor = "#8B5CF6"
-        ),
-        ScheduleResponseDto(
-            id = "2", 
-            habitName = "Walk the plank",
-            habitIcon = "🏴‍☠️",
-            scheduledTime = "11:00",
-            duration = 30,
-            status = ScheduleStatus.PLANNED,
-            notes = null,
-            isCompleted = false,
-            timeOfDay = TimeOfDay.MORNING,
-            habitColor = "#8B5CF6"
-        ),
-        
-        // Afternoon
-        ScheduleResponseDto(
-            id = "3",
-            habitName = "Run from Kraken",
-            habitIcon = "🦑",
-            scheduledTime = "14:00",
-            duration = 45,
-            status = ScheduleStatus.PLANNED,
-            notes = null,
-            isCompleted = false,
-            timeOfDay = TimeOfDay.AFTERNOON,
-            habitColor = "#8B5CF6"
-        ),
-        ScheduleResponseDto(
-            id = "4",
-            habitName = "Follow treasure map",
-            habitIcon = "🗺️",
-            scheduledTime = "16:00",
-            duration = 60,
-            status = ScheduleStatus.COMPLETED,
-            notes = null,
-            isCompleted = true,
-            timeOfDay = TimeOfDay.AFTERNOON,
-            habitColor = "#06B6D4"
-        ),
-        ScheduleResponseDto(
-            id = "5",
-            habitName = "Drink rum",
-            habitIcon = "🥃",
-            scheduledTime = "15:15",
-            duration = 5,
-            status = ScheduleStatus.PLANNED,
-            notes = null,
-            isCompleted = false,
-            timeOfDay = TimeOfDay.AFTERNOON,
-            habitColor = "#8B5CF6"
-        ),
-        
-        // Night
-        ScheduleResponseDto(
-            id = "6",
-            habitName = "Journal adventures",
-            habitIcon = "✍️",
-            scheduledTime = "19:30",
-            duration = 20,
-            status = ScheduleStatus.PLANNED,
-            notes = null,
-            isCompleted = false,
-            timeOfDay = TimeOfDay.NIGHT,
-            habitColor = "#F59E0B"
-        ),
-        ScheduleResponseDto(
-            id = "7",
-            habitName = "Walk the plank",
-            habitIcon = "🏴‍☠️",
-            scheduledTime = "18:15",
-            duration = 30,
-            status = ScheduleStatus.PLANNED,
-            notes = null,
-            isCompleted = false,
-            timeOfDay = TimeOfDay.NIGHT,
-            habitColor = "#8B5CF6"
-        )
-    )
+    fun getSampleSchedules(): List<ScheduleResponseDto> = emptyList()
 }

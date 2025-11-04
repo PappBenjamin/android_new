@@ -9,119 +9,65 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.firstapp.myapplication.R
 import com.firstapp.myapplication.databinding.ItemScheduleBinding
-import com.firstapp.myapplication.databinding.ItemScheduleHeaderBinding
 import com.firstapp.myapplication.network.models.ScheduleResponseDto
-import com.firstapp.myapplication.network.models.ScheduleStatus
 
 class ScheduleAdapter(
-    private val onItemClick: (ScheduleResponseDto) -> Unit
-) : ListAdapter<Any, RecyclerView.ViewHolder>(DiffCallback) {
-    
+    private val onItemClick: (Int) -> Unit
+) : ListAdapter<ScheduleResponseDto, ScheduleAdapter.ScheduleViewHolder>(DiffCallback) {
+
     companion object {
-        private const val TYPE_HEADER = 0
-        private const val TYPE_SCHEDULE = 1
-        
-        private val DiffCallback = object : DiffUtil.ItemCallback<Any>() {
-            override fun areItemsTheSame(oldItem: Any, newItem: Any): Boolean {
-                return when {
-                    oldItem is String && newItem is String -> oldItem == newItem
-                    oldItem is ScheduleResponseDto && newItem is ScheduleResponseDto -> 
-                        oldItem.id == newItem.id
-                    else -> false
-                }
+        private val DiffCallback = object : DiffUtil.ItemCallback<ScheduleResponseDto>() {
+            override fun areItemsTheSame(oldItem: ScheduleResponseDto, newItem: ScheduleResponseDto): Boolean {
+                return oldItem.id == newItem.id
             }
             
-            override fun areContentsTheSame(oldItem: Any, newItem: Any): Boolean {
-                return when {
-                    oldItem is String && newItem is String -> oldItem == newItem
-                    oldItem is ScheduleResponseDto && newItem is ScheduleResponseDto -> {
-                        oldItem.habitName == newItem.habitName &&
-                        oldItem.scheduledTime == newItem.scheduledTime &&
+            override fun areContentsTheSame(oldItem: ScheduleResponseDto, newItem: ScheduleResponseDto): Boolean {
+                return oldItem.habit?.name == newItem.habit?.name &&
+                        oldItem.startTime == newItem.startTime &&
                         oldItem.status == newItem.status &&
-                        oldItem.isCompleted == newItem.isCompleted &&
-                        oldItem.habitIcon == newItem.habitIcon &&
-                        oldItem.habitColor == newItem.habitColor
-                    }
-                    else -> false
-                }
+                        oldItem.durationMinutes == newItem.durationMinutes
             }
         }
     }
-    
-    override fun getItemViewType(position: Int): Int {
-        return when (getItem(position)) {
-            is String -> TYPE_HEADER
-            is ScheduleResponseDto -> TYPE_SCHEDULE
-            else -> throw IllegalArgumentException("Unknown item type")
-        }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ScheduleViewHolder {
+        val binding = ItemScheduleBinding.inflate(
+            LayoutInflater.from(parent.context), parent, false
+        )
+        return ScheduleViewHolder(binding)
     }
     
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return when (viewType) {
-            TYPE_HEADER -> {
-                val binding = ItemScheduleHeaderBinding.inflate(
-                    LayoutInflater.from(parent.context), parent, false
-                )
-                HeaderViewHolder(binding)
-            }
-            TYPE_SCHEDULE -> {
-                val binding = ItemScheduleBinding.inflate(
-                    LayoutInflater.from(parent.context), parent, false
-                )
-                ScheduleViewHolder(binding)
-            }
-            else -> throw IllegalArgumentException("Unknown view type")
-        }
+    override fun onBindViewHolder(holder: ScheduleViewHolder, position: Int) {
+        val schedule = getItem(position)
+        holder.bind(schedule, onItemClick)
     }
-    
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (holder) {
-            is HeaderViewHolder -> {
-                val header = getItem(position) as String
-                holder.bind(header)
-            }
-            is ScheduleViewHolder -> {
-                val schedule = getItem(position) as ScheduleResponseDto
-                holder.bind(schedule, onItemClick)
-            }
-        }
-    }
-    
-    class HeaderViewHolder(
-        private val binding: ItemScheduleHeaderBinding
-    ) : RecyclerView.ViewHolder(binding.root) {
-        
-        fun bind(header: String) {
-            binding.tvTimeOfDay.text = header
-        }
-    }
-    
+
     class ScheduleViewHolder(
         private val binding: ItemScheduleBinding
     ) : RecyclerView.ViewHolder(binding.root) {
         
-        fun bind(schedule: ScheduleResponseDto, onItemClick: (ScheduleResponseDto) -> Unit) {
+        fun bind(schedule: ScheduleResponseDto, onItemClick: (Int) -> Unit) {
             binding.apply {
-                // Set habit icon and name
-                tvHabitIcon.text = schedule.habitIcon ?: "📋"
-                tvHabitName.text = schedule.habitName
-                tvScheduledTime.text = schedule.scheduledTime
-                
+                // Set habit name from habit object
+                tvHabitName.text = schedule.habit?.name ?: "Habit"
+                tvScheduledTime.text = schedule.startTime
+
+
                 // Set status indicator
                 when (schedule.status) {
-                    ScheduleStatus.COMPLETED -> {
+                    "Completed" -> {
                         ivStatusIndicator.setImageResource(R.drawable.ic_check_completed)
                         ivStatusIndicator.setColorFilter(
                             ContextCompat.getColor(root.context, android.R.color.holo_green_dark)
                         )
                     }
-                    ScheduleStatus.PLANNED -> {
+                    "Planned" -> {
                         ivStatusIndicator.setImageResource(R.drawable.ic_circle_outline)
                         ivStatusIndicator.setColorFilter(
                             ContextCompat.getColor(root.context, R.color.gray_400)
                         )
                     }
-                    ScheduleStatus.SKIPPED -> {
+                    "Skipped" -> {
                         ivStatusIndicator.setImageResource(R.drawable.ic_close)
                         ivStatusIndicator.setColorFilter(
                             ContextCompat.getColor(root.context, android.R.color.holo_red_dark)
@@ -130,12 +76,18 @@ class ScheduleAdapter(
                 }
                 
                 // Set habit color accent
-                schedule.habitColor?.let { colorString ->
+                schedule.habit?.categoryId?.let { categoryId ->
+                    val colorMap = mapOf(
+                        1 to "#8B5CF6",  // Purple
+                        2 to "#06B6D4",  // Cyan
+                        3 to "#F59E0B",  // Amber
+                        4 to "#10B981"   // Emerald
+                    )
+                    val colorString = colorMap[categoryId] ?: "#8B5CF6"
                     try {
                         val color = Color.parseColor(colorString)
                         viewColorAccent.setBackgroundColor(color)
                     } catch (e: IllegalArgumentException) {
-                        // Fallback to default color
                         viewColorAccent.setBackgroundColor(
                             ContextCompat.getColor(root.context, R.color.purple_500)
                         )
@@ -143,7 +95,7 @@ class ScheduleAdapter(
                 }
                 
                 // Set click listener
-                root.setOnClickListener { onItemClick(schedule) }
+                root.setOnClickListener { onItemClick(schedule.id) }
             }
         }
     }

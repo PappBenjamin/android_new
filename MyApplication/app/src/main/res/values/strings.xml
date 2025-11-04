@@ -3,4 +3,9 @@
 
     <!-- Google OAuth Web Client ID - Get this from Google Cloud Console -->
     <string name="google_web_client_id">363767051304-6tbah41jf730pu31ahs8kt5lmqtmt75r.apps.googleusercontent.com</string>
+
+    <!-- Profile Page Strings -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_name">John Doe</string>
+    <string name="profile_email">john.doe@example.com</string>
 </resources>
