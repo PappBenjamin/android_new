@@ -10,7 +10,6 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.firstapp.myapplication.R
 import com.firstapp.myapplication.auth.TokenManager
 import com.firstapp.myapplication.databinding.FragmentAddScheduleBinding
 import com.firstapp.myapplication.network.models.HabitResponseDto
@@ -123,18 +122,23 @@ class AddScheduleFragment : Fragment() {
                     binding.durationInput.setText(durationMinutes.toString())
                 }
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // If parsing fails, don't update duration
         }
     }
 
     private fun setupClickListeners() {
+
         binding.createBtn.setOnClickListener {
             createSchedule()
         }
 
         binding.cancelBtn.setOnClickListener {
-            findNavController().popBackStack()
+            try {
+                findNavController().popBackStack()
+            } catch (_: Exception) {
+                requireActivity().onBackPressedDispatcher.onBackPressed()
+            }
         }
     }
 

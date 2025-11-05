@@ -58,6 +58,8 @@ class EditProfileFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
+
+
         binding.changeImageBtn.setOnClickListener {
             pickImageLauncher.launch("image/*")
         }
@@ -67,7 +69,11 @@ class EditProfileFragment : Fragment() {
         }
 
         binding.cancelBtn.setOnClickListener {
-            findNavController().popBackStack()
+            try {
+                findNavController().popBackStack()
+            } catch (_: Exception) {
+                requireActivity().onBackPressedDispatcher.onBackPressed()
+            }
         }
     }
 

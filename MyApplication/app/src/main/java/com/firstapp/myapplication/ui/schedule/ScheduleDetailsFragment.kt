@@ -66,9 +66,6 @@ class ScheduleDetailsFragment : Fragment() {
             showDeleteConfirmation()
         }
 
-        binding.backBtn.setOnClickListener {
-            findNavController().popBackStack()
-        }
     }
 
     private fun editSchedule() {
