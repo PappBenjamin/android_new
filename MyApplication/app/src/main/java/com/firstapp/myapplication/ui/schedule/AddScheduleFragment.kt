@@ -12,7 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.firstapp.myapplication.auth.TokenManager
 import com.firstapp.myapplication.databinding.FragmentAddScheduleBinding
-import com.firstapp.myapplication.network.models.HabitResponseDto
+import com.firstapp.myapplication.network.dto.HabitResponseDto
 import com.firstapp.myapplication.repository.ProfileRepository
 import com.firstapp.myapplication.repository.ScheduleRepository
 import kotlinx.coroutines.launch

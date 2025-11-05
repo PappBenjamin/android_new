@@ -23,7 +23,7 @@
         android:usesCleartextTraffic="true">
         <!-- LAUNCHER: SplashActivity -->
         <activity
-            android:name=".SplashActivity"
+            android:name=".splash.SplashActivity"
             android:theme="@style/Theme.SplashScreen"
             android:exported="true">
             <intent-filter>
@@ -34,7 +34,7 @@
         </activity> 
         <!-- MainActivity -->
         <activity
-            android:name=".MainActivity"
+            android:name=".main.MainActivity"
             android:exported="false" />
         <!-- LoginActivity -->
         <activity
@@ -43,10 +43,6 @@
         <!-- RegisterActivity -->
         <activity
             android:name=".auth.RegisterActivity"
-            android:exported="false" />
-        <!-- PasswordResetActivity -->
-        <activity
-            android:name=".auth.PasswordResetActivity"
             android:exported="false" />
     </application>
 

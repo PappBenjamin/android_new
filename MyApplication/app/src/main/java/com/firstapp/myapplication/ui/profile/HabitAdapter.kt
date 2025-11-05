@@ -4,7 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.firstapp.myapplication.databinding.ItemHabitBinding
-import com.firstapp.myapplication.network.models.HabitResponseDto
+import com.firstapp.myapplication.network.dto.HabitResponseDto
 
 class HabitAdapter(
     private val habits: MutableList<HabitResponseDto> = mutableListOf(),

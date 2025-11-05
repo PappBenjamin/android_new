@@ -12,7 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.firstapp.myapplication.auth.TokenManager
 import com.firstapp.myapplication.databinding.FragmentAddHabitBinding
-import com.firstapp.myapplication.network.models.HabitCategoryDto
+import com.firstapp.myapplication.network.dto.HabitCategoryDto
 import com.firstapp.myapplication.repository.ProfileRepository
 import kotlinx.coroutines.launch
 

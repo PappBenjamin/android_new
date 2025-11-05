@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.firstapp.myapplication.R
 import com.firstapp.myapplication.databinding.ItemScheduleBinding
-import com.firstapp.myapplication.network.models.ScheduleResponseDto
+import com.firstapp.myapplication.network.dto.ScheduleResponseDto
 
 class ScheduleAdapter(
     private val onItemClick: (Int) -> Unit

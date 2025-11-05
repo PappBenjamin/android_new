@@ -2,13 +2,9 @@ package com.firstapp.myapplication.repository
 
 import com.firstapp.myapplication.auth.TokenManager
 import com.firstapp.myapplication.network.ApiClient
-import com.firstapp.myapplication.network.models.*
+import com.firstapp.myapplication.network.dto.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.toRequestBody
-import android.net.Uri
 
 class AuthRepository(private val tokenManager: TokenManager) {
     

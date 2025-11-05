@@ -106,7 +106,7 @@ class ScheduleDetailsFragment : Fragment() {
         }
     }
 
-    private fun displayScheduleDetails(schedule: com.firstapp.myapplication.network.models.ScheduleResponseDto) {
+    private fun displayScheduleDetails(schedule: com.firstapp.myapplication.network.dto.ScheduleResponseDto) {
         binding.apply {
             habitNameText.text = schedule.habit?.name ?: "Habit"
             habitDescriptionText.text = schedule.habit?.description ?: "No description"

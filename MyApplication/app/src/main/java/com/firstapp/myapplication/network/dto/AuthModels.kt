@@ -1,4 +1,4 @@
-package com.firstapp.myapplication.network.models
+package com.firstapp.myapplication.network.dto
 
 data class AuthResponseDto(
     val message: String,

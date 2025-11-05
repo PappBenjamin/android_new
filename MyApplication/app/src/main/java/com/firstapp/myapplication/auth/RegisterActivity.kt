@@ -3,10 +3,11 @@ package com.firstapp.myapplication.auth
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import android.util.Patterns
 import android.view.View
 import android.widget.Toast
@@ -15,20 +16,20 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
-import com.firstapp.myapplication.MainActivity
+import com.firstapp.myapplication.main.MainActivity
 import com.firstapp.myapplication.MyApplication
-import com.firstapp.myapplication.R
 import com.firstapp.myapplication.databinding.ActivityRegisterBinding
 import com.firstapp.myapplication.repository.AuthRepository
+import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.launch
 
 class RegisterActivity : AppCompatActivity() {
-    
+
     private lateinit var binding: ActivityRegisterBinding
     private lateinit var authRepository: AuthRepository
     private lateinit var googleSignInManager: GoogleSignInManager
     private var selectedImageUri: Uri? = null
-    
+
     companion object {
         private const val GOOGLE_SIGN_IN_REQUEST_CODE = 9001
     }
@@ -45,7 +46,7 @@ class RegisterActivity : AppCompatActivity() {
                 .into(binding.ivProfileImage)
         }
     }
-    
+
     // Permission launcher
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -56,12 +57,12 @@ class RegisterActivity : AppCompatActivity() {
             Toast.makeText(this, "Permission denied to access photos", Toast.LENGTH_SHORT).show()
         }
     }
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        
+
         // Initialize repository and Google Sign-In
         val app = application as MyApplication
         authRepository = AuthRepository(app.tokenManager)
@@ -69,51 +70,51 @@ class RegisterActivity : AppCompatActivity() {
 
         setupUI()
     }
-    
+
     private fun setupUI() {
         // Register button click
         binding.btnRegisterAction.setOnClickListener {
             handleRegister()
         }
-        
+
         // Login tab click
         binding.btnLogin.setOnClickListener {
             // Navigate back to login activity
             finish()
         }
-        
+
         // Google register button
         binding.btnGoogleRegister.setOnClickListener {
             handleGoogleSignIn()
         }
-        
+
         // Profile image click listeners
         binding.ivProfileImage.setOnClickListener {
             checkPermissionAndPickImage()
         }
-        
+
         binding.tvAddPhoto.setOnClickListener {
             checkPermissionAndPickImage()
         }
     }
-    
+
     private fun handleRegister() {
         val username = binding.etUsername.text.toString().trim()
         val email = binding.etEmail.text.toString().trim()
         val password = binding.etPassword.text.toString()
         val confirmPassword = binding.etConfirmPassword.text.toString()
-        
+
         if (validateInput(username, email, password, confirmPassword)) {
             performRegister(username, email, password)
         }
     }
-    
+
     private fun validateInput(username: String, email: String, password: String, confirmPassword: String): Boolean {
         var isValid = true
-        
+
         // Reset ALL error states first
         resetFieldErrors()
-        
+
         // Username validation
         if (username.isEmpty()) {
             setFieldError(binding.tilUsername, "Felhasználónév kötelező")
@@ -122,7 +123,7 @@ class RegisterActivity : AppCompatActivity() {
             setFieldError(binding.tilUsername, "Legalább 3 karakter szükséges")
             isValid = false
         }
-        
+
         // Email validation
         if (email.isEmpty()) {
             setFieldError(binding.tilEmail, "Email cím kötelező")
@@ -131,7 +132,7 @@ class RegisterActivity : AppCompatActivity() {
             setFieldError(binding.tilEmail, "Érvényes email címet adj meg")
             isValid = false
         }
-        
+
         // Password validation
         if (password.isEmpty()) {
             setFieldError(binding.tilPassword, "Jelszó kötelező")
@@ -140,7 +141,7 @@ class RegisterActivity : AppCompatActivity() {
             setFieldError(binding.tilPassword, "Legalább 6 karakter szükséges")
             isValid = false
         }
-        
+
         // Confirm password validation
         if (confirmPassword.isEmpty()) {
             setFieldError(binding.tilConfirmPassword, "Jelszó megerősítés kötelező")
@@ -150,10 +151,10 @@ class RegisterActivity : AppCompatActivity() {
             setFieldError(binding.tilConfirmPassword, "A jelszavak nem egyeznek")
             isValid = false
         }
-        
+
         return isValid
     }
-    
+
     private fun resetFieldErrors() {
         // Reset all fields to normal state
         resetSingleField(binding.tilUsername)
@@ -161,37 +162,37 @@ class RegisterActivity : AppCompatActivity() {
         resetSingleField(binding.tilPassword)
         resetSingleField(binding.tilConfirmPassword)
     }
-    
-    private fun resetSingleField(textInputLayout: com.google.android.material.textfield.TextInputLayout) {
+
+    private fun resetSingleField(textInputLayout: TextInputLayout) {
         textInputLayout.error = null
-        textInputLayout.boxBackgroundColor = android.graphics.Color.parseColor("#2D3748")
+        textInputLayout.boxBackgroundColor = Color.parseColor("#2D3748")
         textInputLayout.setBoxStrokeColorStateList(
-            android.content.res.ColorStateList.valueOf(android.graphics.Color.TRANSPARENT)
+            ColorStateList.valueOf(Color.TRANSPARENT)
         )
     }
-    
-    private fun setFieldError(textInputLayout: com.google.android.material.textfield.TextInputLayout, errorMessage: String) {
+
+    private fun setFieldError(textInputLayout: TextInputLayout, errorMessage: String) {
         textInputLayout.error = errorMessage
         // Set red background for error state
-        textInputLayout.boxBackgroundColor = android.graphics.Color.parseColor("#2D1B1F")
+        textInputLayout.boxBackgroundColor = Color.parseColor("#2D1B1F")
         // Set red border
         textInputLayout.setBoxStrokeColorStateList(
-            android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#EF4444"))
+            ColorStateList.valueOf(Color.parseColor("#EF4444"))
         )
     }
-    
+
     private fun performRegister(username: String, email: String, password: String) {
         // Show loading
         setLoadingState(true)
-        
+
         lifecycleScope.launch {
             try {
                 val result = authRepository.signUp(username, email, password)
-                
+
                 if (result.isSuccess) {
                     // Registration successful, go back to login page
                     Toast.makeText(this@RegisterActivity, "Registration successful! Please log in.", Toast.LENGTH_LONG).show()
-                    
+
                     // Navigate back to LoginActivity
                     finish() // This will go back to LoginActivity
                 } else {
@@ -206,18 +207,18 @@ class RegisterActivity : AppCompatActivity() {
             }
         }
     }
-    
+
     private fun setLoadingState(isLoading: Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         binding.btnRegisterAction.isEnabled = !isLoading
         binding.btnLogin.isEnabled = !isLoading
         binding.btnGoogleRegister.isEnabled = !isLoading
     }
-    
+
     private fun checkPermissionAndPickImage() {
         when {
             // For Android 13+ (API 33+), use READ_MEDIA_IMAGES
-            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU -> {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
                 when {
                     ContextCompat.checkSelfPermission(
                         this,
@@ -246,7 +247,7 @@ class RegisterActivity : AppCompatActivity() {
             }
         }
     }
-    
+
     private fun openImagePicker() {
         imagePickerLauncher.launch("image/*")
     }
@@ -259,7 +260,7 @@ class RegisterActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        
+
         if (requestCode == GOOGLE_SIGN_IN_REQUEST_CODE) {
             lifecycleScope.launch {
                 handleGoogleSignInResult(data)

@@ -3,7 +3,7 @@ package com.firstapp.myapplication.repository
 import com.firstapp.myapplication.auth.TokenManager
 import com.firstapp.myapplication.network.ApiClient
 import com.firstapp.myapplication.network.api.CreateHabitRequest
-import com.firstapp.myapplication.network.models.*
+import com.firstapp.myapplication.network.dto.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

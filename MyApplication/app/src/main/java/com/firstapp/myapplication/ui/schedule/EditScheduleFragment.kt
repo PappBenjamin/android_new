@@ -65,7 +65,7 @@ class EditScheduleFragment : Fragment() {
         }
     }
 
-    private fun displayScheduleData(schedule: com.firstapp.myapplication.network.models.ScheduleResponseDto) {
+    private fun displayScheduleData(schedule: com.firstapp.myapplication.network.dto.ScheduleResponseDto) {
         binding.apply {
             startTimeInput.setText(schedule.startTime)
             endTimeInput.setText(schedule.endTime ?: "")

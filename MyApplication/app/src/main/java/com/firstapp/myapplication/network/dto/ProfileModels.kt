@@ -1,4 +1,4 @@
-package com.firstapp.myapplication.network.models
+package com.firstapp.myapplication.network.dto
 
 import com.google.gson.annotations.SerializedName
 

@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
 import com.firstapp.myapplication.R
 import com.firstapp.myapplication.auth.TokenManager
+import com.firstapp.myapplication.auth.LoginActivity
 import com.firstapp.myapplication.databinding.FragmentProfileBinding
 import com.firstapp.myapplication.repository.ProfileRepository
 import kotlinx.coroutines.launch
@@ -168,7 +169,7 @@ class ProfileFragment : Fragment() {
 
     private fun navigateToLogin() {
         try {
-            val intent = android.content.Intent(requireContext(), com.firstapp.myapplication.auth.LoginActivity::class.java)
+            val intent = android.content.Intent(requireContext(), LoginActivity::class.java)
             intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
             requireActivity().finish()
