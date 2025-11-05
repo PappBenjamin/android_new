@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#1E1E2E"
@@ -8,7 +9,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:padding="24dp">
 
         <!-- App Logo and Title -->
@@ -159,24 +160,12 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Forgot Password -->
-        <TextView
-            android:id="@+id/tvForgotPassword"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Forgot password?"
-            android:textColor="#6366F1"
-            android:textSize="14sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tilPassword" />
-
         <!-- Login Button -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnLoginAction"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="24dp"
             android:background="@drawable/button_primary"
             android:padding="16dp"
             android:text="Log In"
@@ -186,7 +175,7 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvForgotPassword" />
+            app:layout_constraintTop_toBottomOf="@id/tilPassword" />
 
         <!-- OR Divider -->
         <LinearLayout

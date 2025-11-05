@@ -10,6 +10,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.graphics.toColorInt
 import androidx.lifecycle.lifecycleScope
 import com.firstapp.myapplication.main.MainActivity
 import com.firstapp.myapplication.MyApplication
@@ -138,11 +139,11 @@ class LoginActivity : AppCompatActivity() {
                 val error = result.exceptionOrNull()?.message ?: "Google login failed"
                 Log.e(TAG, "Google login failed: $error")
                 Toast.makeText(this@LoginActivity, error, Toast.LENGTH_LONG).show()
+                setLoadingState(false)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Exception in performGoogleLogin", e)
             Toast.makeText(this@LoginActivity, "Network error: ${e.message}", Toast.LENGTH_LONG).show()
-        } finally {
             setLoadingState(false)
         }
     }
@@ -182,7 +183,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun resetSingleField(textInputLayout: TextInputLayout) {
         textInputLayout.error = null
-        textInputLayout.boxBackgroundColor = Color.parseColor("#2D3748")
+        textInputLayout.boxBackgroundColor = "#2D3748".toColorInt()
         textInputLayout.setBoxStrokeColorStateList(
             ColorStateList.valueOf(Color.TRANSPARENT)
         )
@@ -191,10 +192,10 @@ class LoginActivity : AppCompatActivity() {
     private fun setFieldError(textInputLayout: TextInputLayout, errorMessage: String) {
         textInputLayout.error = errorMessage
         // Set red background for error state
-        textInputLayout.boxBackgroundColor = Color.parseColor("#2D1B1F")
+        textInputLayout.boxBackgroundColor = "#2D1B1F".toColorInt()
         // Set red border
         textInputLayout.setBoxStrokeColorStateList(
-            ColorStateList.valueOf(Color.parseColor("#EF4444"))
+            ColorStateList.valueOf("#EF4444".toColorInt())
         )
     }
 
@@ -207,18 +208,21 @@ class LoginActivity : AppCompatActivity() {
 
             if (result.isSuccess) {
                 // Login successful, navigate to main activity
+                Log.d(TAG, "Login successful, navigating to MainActivity")
                 val intent = Intent(this@LoginActivity, MainActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
                 finish()
             } else {
-                // Login failed
+                // Login failed - show detailed error message
                 val error = result.exceptionOrNull()?.message ?: "Login failed"
+                Log.e(TAG, "Login failed: $error")
                 Toast.makeText(this@LoginActivity, error, Toast.LENGTH_LONG).show()
+                setLoadingState(false)
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Exception during login", e)
             Toast.makeText(this@LoginActivity, "Network error: ${e.message}", Toast.LENGTH_LONG).show()
-        } finally {
             setLoadingState(false)
         }
     }
