@@ -55,11 +55,11 @@ class ScheduleDetailsFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.editBtn.setOnClickListener {
-            showToast("Edit Schedule - Coming soon")
+            editSchedule()
         }
 
         binding.addProgressBtn.setOnClickListener {
-            showToast("Add Progress - Coming soon")
+            navigateToAddProgress()
         }
 
         binding.deleteBtn.setOnClickListener {
@@ -68,6 +68,28 @@ class ScheduleDetailsFragment : Fragment() {
 
         binding.backBtn.setOnClickListener {
             findNavController().popBackStack()
+        }
+    }
+
+    private fun editSchedule() {
+        val bundle = android.os.Bundle().apply {
+            putInt("scheduleId", scheduleId)
+        }
+        try {
+            findNavController().navigate(com.firstapp.myapplication.R.id.editScheduleFragment, bundle)
+        } catch (e: Exception) {
+            showToast("Navigation to edit schedule failed: ${e.message}")
+        }
+    }
+
+    private fun navigateToAddProgress() {
+        val bundle = android.os.Bundle().apply {
+            putInt("scheduleId", scheduleId)
+        }
+        try {
+            findNavController().navigate(com.firstapp.myapplication.R.id.addProgressFragment, bundle)
+        } catch (e: Exception) {
+            showToast("Add Progress - Coming soon")
         }
     }
 

@@ -130,9 +130,9 @@ class ProfileFragment : Fragment() {
 
     private fun navigateToEditProfile() {
         try {
-            findNavController().navigate(com.firstapp.myapplication.R.id.profileFragment)
+            findNavController().navigate(R.id.editProfileFragment)
         } catch (e: Exception) {
-            showToast("Edit Profile coming soon")
+            showToast("Navigation to edit profile failed: ${e.message}")
         }
     }
 
@@ -153,25 +153,27 @@ class ProfileFragment : Fragment() {
                 val result = profileRepository.logout()
                 result.onSuccess {
                     showToast("Logged out successfully")
-                    try {
-                        val homeNavId = 2131361982 // action_profileFragment_to_homeFragment
-                        findNavController().navigate(homeNavId)
-                    } catch (navError: Exception) {
-                        showToast("Returning to home")
-                    }
+                    navigateToLogin()
                 }
                 result.onFailure { error ->
                     showToast("Logout failed: ${error.message}")
-                    try {
-                        val homeNavId = 2131361982 // action_profileFragment_to_homeFragment
-                        findNavController().navigate(homeNavId)
-                    } catch (navError: Exception) {
-                        showToast("Returning to home")
-                    }
+                    navigateToLogin()
                 }
             } catch (e: Exception) {
                 showToast("Error during logout: ${e.message}")
+                navigateToLogin()
             }
+        }
+    }
+
+    private fun navigateToLogin() {
+        try {
+            val intent = android.content.Intent(requireContext(), com.firstapp.myapplication.auth.LoginActivity::class.java)
+            intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            requireActivity().finish()
+        } catch (e: Exception) {
+            showToast("Navigation to login failed: ${e.message}")
         }
     }
 

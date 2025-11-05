@@ -1,17 +1,25 @@
 package com.firstapp.myapplication.ui.profile
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
+import com.firstapp.myapplication.R
 import com.firstapp.myapplication.auth.TokenManager
 import com.firstapp.myapplication.databinding.FragmentEditProfileBinding
 import com.firstapp.myapplication.repository.ProfileRepository
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 
 class EditProfileFragment : Fragment() {
     private var _binding: FragmentEditProfileBinding? = null
@@ -19,6 +27,17 @@ class EditProfileFragment : Fragment() {
 
     private lateinit var tokenManager: TokenManager
     private lateinit var profileRepository: ProfileRepository
+    private var selectedImageUri: Uri? = null
+
+    private val pickImageLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            selectedImageUri = uri
+            binding.profileImageView.setImageURI(uri)
+            showToast("Image selected. Click 'Save Changes' to upload.")
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -39,8 +58,12 @@ class EditProfileFragment : Fragment() {
     }
 
     private fun setupClickListeners() {
+        binding.changeImageBtn.setOnClickListener {
+            pickImageLauncher.launch("image/*")
+        }
+
         binding.saveBtn.setOnClickListener {
-            updateProfile()
+            saveProfile()
         }
 
         binding.cancelBtn.setOnClickListener {
@@ -55,6 +78,14 @@ class EditProfileFragment : Fragment() {
                 result.onSuccess { profile ->
                     binding.usernameInput.setText(profile.username)
                     binding.emailText.text = profile.email
+
+                    // Load profile image
+                    if (!profile.profileImageUrl.isNullOrEmpty()) {
+                        Glide.with(requireContext())
+                            .load(profile.profileImageUrl)
+                            .centerCrop()
+                            .into(binding.profileImageView)
+                    }
                 }
                 result.onFailure { error ->
                     showToast("Failed to load profile: ${error.message}")
@@ -65,7 +96,7 @@ class EditProfileFragment : Fragment() {
         }
     }
 
-    private fun updateProfile() {
+    private fun saveProfile() {
         val newUsername = binding.usernameInput.text.toString().trim()
 
         if (newUsername.isEmpty()) {
@@ -75,16 +106,56 @@ class EditProfileFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val result = profileRepository.updateProfile(newUsername)
-                result.onSuccess {
-                    showToast("Profile updated successfully")
-                    findNavController().popBackStack()
+                // First, update the username
+                val updateResult = profileRepository.updateProfile(newUsername)
+                updateResult.onSuccess {
+                    showToast("Username updated successfully")
+
+                    // Then upload image if selected
+                    if (selectedImageUri != null) {
+                        uploadProfileImage()
+                    } else {
+                        findNavController().popBackStack()
+                    }
                 }
-                result.onFailure { error ->
+                updateResult.onFailure { error ->
                     showToast("Failed to update profile: ${error.message}")
                 }
             } catch (e: Exception) {
                 showToast("Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun uploadProfileImage() {
+        if (selectedImageUri == null) {
+            showToast("No image selected")
+            return
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val inputStream = requireContext().contentResolver.openInputStream(selectedImageUri!!)
+                val tempFile = File.createTempFile("profile", ".jpg", requireContext().cacheDir)
+                tempFile.outputStream().use { fileOut ->
+                    inputStream?.copyTo(fileOut)
+                }
+
+                val requestFile = tempFile.asRequestBody("image/jpeg".toMediaType())
+                val body = MultipartBody.Part.createFormData("profileImage", tempFile.name, requestFile)
+
+                val result = profileRepository.uploadProfileImage(body)
+                result.onSuccess {
+                    showToast("Profile image uploaded successfully")
+                    tempFile.delete()
+                    findNavController().popBackStack()
+                }
+                result.onFailure { error ->
+                    showToast("Failed to upload image: ${error.message}")
+                    tempFile.delete()
+                }
+            } catch (e: Exception) {
+                showToast("Error uploading image: ${e.message}")
             }
         }
     }
@@ -98,4 +169,3 @@ class EditProfileFragment : Fragment() {
         _binding = null
     }
 }
-

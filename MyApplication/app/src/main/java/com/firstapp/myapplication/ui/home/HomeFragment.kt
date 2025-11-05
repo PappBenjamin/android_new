@@ -91,7 +91,14 @@ class HomeFragment : Fragment() {
     }
 
     private fun onScheduleItemClick(scheduleId: Int) {
-        showToast("Schedule Details - Coming soon (ID: $scheduleId)")
+        val bundle = android.os.Bundle().apply {
+            putInt("scheduleId", scheduleId)
+        }
+        try {
+            findNavController().navigate(R.id.scheduleDetailsFragment, bundle)
+        } catch (e: Exception) {
+            showToast("Navigation to schedule details failed: ${e.message}")
+        }
     }
     
     private fun showToast(message: String) {
