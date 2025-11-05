@@ -83,12 +83,14 @@
             android:id="@+id/durationInput"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:hint="e.g., 60"
-            android:inputType="number"
+            android:hint="Auto-calculated"
             android:textColorHint="#64748B"
             android:textColor="#F8FAFC"
             android:padding="12dp"
             android:background="@drawable/edit_text_background"
+            android:inputType="number"
+            android:enabled="false"
+            android:alpha="0.6"
             android:layout_marginBottom="20dp" />
 
         <TextView

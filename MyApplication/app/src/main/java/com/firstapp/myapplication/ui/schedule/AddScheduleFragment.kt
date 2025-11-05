@@ -57,6 +57,15 @@ class AddScheduleFragment : Fragment() {
         val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         binding.dateInput.setText(todayDate)
 
+        // Setup duration calculation on time input changes
+        binding.startTimeInput.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) calculateDuration()
+        }
+
+        binding.endTimeInput.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) calculateDuration()
+        }
+
         // Setup repeat pattern spinner
         val repeatPatterns = listOf("None", "Daily", "Weekdays", "Weekends")
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, repeatPatterns)
@@ -84,6 +93,38 @@ class AddScheduleFragment : Fragment() {
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+    }
+
+    private fun calculateDuration() {
+        val startTime = binding.startTimeInput.text.toString().trim()
+        val endTime = binding.endTimeInput.text.toString().trim()
+
+        if (startTime.isEmpty() || endTime.isEmpty()) {
+            return
+        }
+
+        try {
+            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            val startDate = timeFormat.parse(startTime)
+            val endDate = timeFormat.parse(endTime)
+
+            if (startDate != null && endDate != null) {
+                var durationMs = endDate.time - startDate.time
+
+                // Handle case where end time is next day
+                if (durationMs < 0) {
+                    durationMs += 24 * 60 * 60 * 1000
+                }
+
+                val durationMinutes = (durationMs / (1000 * 60)).toInt()
+
+                if (durationMinutes > 0) {
+                    binding.durationInput.setText(durationMinutes.toString())
+                }
+            }
+        } catch (e: Exception) {
+            // If parsing fails, don't update duration
         }
     }
 
@@ -136,7 +177,6 @@ class AddScheduleFragment : Fragment() {
     private fun createSchedule() {
         val startTime = binding.startTimeInput.text.toString().trim()
         val endTime = binding.endTimeInput.text.toString().trim()
-        val durationStr = binding.durationInput.text.toString().trim()
         val date = binding.dateInput.text.toString().trim()
         val notes = binding.notesInput.text.toString().trim()
 
@@ -157,7 +197,6 @@ class AddScheduleFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val duration = durationStr.toIntOrNull()
                 val endTimeOrNull = endTime.ifEmpty { null }
                 val notesOrNull = notes.ifEmpty { null }
 
@@ -168,7 +207,6 @@ class AddScheduleFragment : Fragment() {
                         date = date,
                         startTime = startTime,
                         endTime = endTimeOrNull,
-                        durationMinutes = duration,
                         notes = notesOrNull
                     )
 
@@ -193,7 +231,6 @@ class AddScheduleFragment : Fragment() {
                         startTime = startTime,
                         repeatPattern = repeatPatternValue,
                         endTime = endTimeOrNull,
-                        durationMinutes = duration,
                         notes = notesOrNull
                     )
 

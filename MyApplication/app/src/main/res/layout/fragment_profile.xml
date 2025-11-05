@@ -8,16 +8,18 @@
     tools:context=".ui.profile.ProfileFragment">
 
     <!-- Profile Header Section -->
+
     <ImageView
         android:id="@+id/profileImage"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="48dp"
+        android:background="@drawable/circular_background"
+        android:clipToOutline="true"
         android:contentDescription="@string/profile_title"
         android:scaleType="centerCrop"
         android:src="@drawable/ic_launcher_foreground"
-        android:background="@drawable/ic_launcher_background"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
