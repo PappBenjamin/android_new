@@ -3,58 +3,71 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
-
-        <EditText android:id="@+id/startTimeInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Start Time (HH:mm)" />
-
-        <EditText android:id="@+id/endTimeInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="End Time (HH:mm)"
-            android:layout_marginTop="8dp" />
-
-        <EditText android:id="@+id/durationInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Duration (minutes)"
-            android:inputType="number"
-            android:layout_marginTop="8dp" />
-
-        <Spinner android:id="@+id/statusSpinner"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp" />
-
-        <EditText android:id="@+id/notesInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Notes"
-            android:lines="3"
-            android:layout_marginTop="16dp" />
+        android:gravity="center">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp">
-            <Button android:id="@+id/saveBtn"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Save" />
-            <Button android:id="@+id/cancelBtn"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Cancel" />
-        </LinearLayout>
-    </LinearLayout>
-</ScrollView>
+            android:orientation="vertical"
+            android:padding="40px"
+            android:layout_marginTop="200dp">
 
+            <EditText android:id="@+id/startTimeInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Start Time (HH:mm)"
+                android:textColor="@android:color/white" />
+
+            <EditText android:id="@+id/endTimeInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="End Time (HH:mm)"
+                android:layout_marginTop="8dp"
+                android:textColor="@android:color/white" />
+
+            <Spinner android:id="@+id/statusSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textColor="@android:color/white" />
+
+            <EditText android:id="@+id/notesInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Notes"
+                android:lines="3"
+                android:layout_marginTop="16dp"
+                android:textColor="@android:color/white" />
+
+            <EditText android:id="@+id/participantsInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Participants (comma separated)"
+                android:layout_marginTop="16dp"
+                android:textColor="@android:color/white" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="16dp">
+                <Button android:id="@+id/saveBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Save"
+                    android:layout_marginRight="8pt"
+                    android:textColor="@android:color/white" />
+                <Button android:id="@+id/cancelBtn"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Cancel"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+</ScrollView>
