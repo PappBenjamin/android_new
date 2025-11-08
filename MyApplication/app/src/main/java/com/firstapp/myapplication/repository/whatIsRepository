@@ -1,0 +1,4 @@
+a repository acts like a "black box" function that provides data (e.g., user info or authentication results) to other parts of your app,
+without exposing the messy details of where it comes from—like API calls, databases, or error handling.
+This encapsulation is considered good practice because it keeps your code clean, modular, and easy to change or test later.
+For example, in AuthRepository, methods like signIn return a Result<AuthResponseDto> without the caller needing to know about network requests or token management.

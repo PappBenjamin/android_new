@@ -3,6 +3,7 @@ package com.firstapp.myapplication.network.dto
 import com.google.gson.annotations.SerializedName
 
 // Profile Response
+// (SerializedName used to transform data from json to kotlin property names)
 data class ProfileResponseDto(
     val id: Int,
     val email: String,

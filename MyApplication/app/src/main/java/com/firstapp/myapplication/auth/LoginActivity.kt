@@ -29,7 +29,7 @@ class LoginActivity : AppCompatActivity() {
         private const val TAG = "LoginActivity"
     }
 
-    // Modern Activity Result API for Google Sign-In
+    // Google Sign-In activity result launcher
     private val googleSignInLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -41,6 +41,8 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Link the layout using ViewBinding
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 

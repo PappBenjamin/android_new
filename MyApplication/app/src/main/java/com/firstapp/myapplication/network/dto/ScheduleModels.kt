@@ -120,20 +120,3 @@ data class CreateProgressRequest(
     @SerializedName("is_completed")
     val isCompleted: Boolean? = null
 )
-
-enum class ScheduleStatus {
-    PLANNED, // Tervezett
-    COMPLETED, // Befejezett  
-    SKIPPED // Kihagyott
-}
-
-enum class TimeOfDay {
-    MORNING, // Reggel
-    AFTERNOON, // Délután
-    NIGHT // Este
-}
-
-// Sample data for testing
-object SampleScheduleData {
-    fun getSampleSchedules(): List<ScheduleResponseDto> = emptyList()
-}
