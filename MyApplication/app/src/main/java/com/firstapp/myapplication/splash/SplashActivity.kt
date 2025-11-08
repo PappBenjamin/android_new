@@ -27,7 +27,8 @@ class SplashActivity : AppCompatActivity() {
     private lateinit var tokenManager: TokenManager
     private lateinit var authRepository: AuthRepository
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?)
+    {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
@@ -66,18 +67,24 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private suspend fun checkAuthenticationAndNavigate() {
-        try {
+        try
+        {
             Log.d(TAG, "Checking authentication status...")
             val isAuthenticated = authRepository.checkAuthenticationStatus()
 
-            if (isAuthenticated) {
+            if (isAuthenticated)
+            {
                 Log.d(TAG, "User is authenticated, navigating to MainActivity")
                 navigateToMain()
-            } else {
+            }
+            else
+            {
                 Log.d(TAG, "User is not authenticated, navigating to LoginActivity")
                 navigateToLogin()
             }
-        } catch (e: Exception) {
+        }
+        catch (e: Exception)
+        {
             Log.e(TAG, "Error during authentication check", e)
             // On error, navigate to login screen
             navigateToLogin()
@@ -85,6 +92,7 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun navigateToMain() {
+        //intents used to request an activity change
         val intent = Intent(this@SplashActivity, MainActivity::class.java)
         startActivity(intent)
         finish()

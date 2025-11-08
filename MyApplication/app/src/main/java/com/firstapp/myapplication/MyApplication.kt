@@ -7,7 +7,6 @@ import com.firstapp.myapplication.network.ApiClient
 class MyApplication : Application() {
     
     lateinit var tokenManager: TokenManager
-        private set
     
     override fun onCreate() {
         super.onCreate()

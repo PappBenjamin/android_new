@@ -16,10 +16,12 @@ class TokenManager(context: Context) {
         private const val EMAIL_KEY = "email"
     }
     
+    // Create or retrieve the MasterKey for encryption (this is the encryption key used by EncryptedSharedPreferences)
     private val masterKey = MasterKey.Builder(context)
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .build()
-    
+
+    // encrypts SharedPreferences using the MasterKey
     private val sharedPreferences: SharedPreferences = EncryptedSharedPreferences.create(
         context,
         PREFS_FILE_NAME,
@@ -27,14 +29,15 @@ class TokenManager(context: Context) {
         EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
-    
+
+    // Save access and refresh tokens securely
     fun saveTokens(accessToken: String, refreshToken: String) {
         sharedPreferences.edit()
             .putString(ACCESS_TOKEN_KEY, accessToken)
             .putString(REFRESH_TOKEN_KEY, refreshToken)
             .apply()
     }
-    
+
     fun getAccessToken(): String? {
         return sharedPreferences.getString(ACCESS_TOKEN_KEY, null)
     }

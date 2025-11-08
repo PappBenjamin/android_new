@@ -10,49 +10,73 @@ import kotlinx.coroutines.withContext
 class ProfileRepository(private val tokenManager: TokenManager) {
 
     suspend fun getCurrentProfile(): Result<ProfileResponseDto> {
-        return withContext(Dispatchers.IO) {
-            try {
+        return withContext(Dispatchers.IO)
+        {
+            try
+            {
                 val response = ApiClient.profileService.getCurrentProfile()
+
                 if (response.isSuccessful && response.body() != null) {
                     Result.success(response.body()!!)
-                } else {
+                }
+                else
+                {
                     Result.failure(Exception("Failed to fetch profile: ${response.code()}"))
                 }
-            } catch (e: Exception) {
+            }
+            catch (e: Exception)
+            {
                 Result.failure(e)
             }
         }
     }
 
-    suspend fun getUserHabits(userId: Int): Result<List<HabitResponseDto>> {
-        return withContext(Dispatchers.IO) {
-            try {
+    suspend fun getUserHabits(userId: Int): Result<List<HabitResponseDto>>
+    {
+        return withContext(Dispatchers.IO)
+        {
+            try
+            {
                 val response = ApiClient.profileService.getUserHabits(userId)
-                if (response.isSuccessful && response.body() != null) {
+
+                if (response.isSuccessful && response.body() != null)
+                {
                     Result.success(response.body()!!)
-                } else {
+                }
+                else
+                {
                     Result.failure(Exception("Failed to fetch habits: ${response.code()}"))
                 }
-            } catch (e: Exception) {
+            }
+            catch (e: Exception)
+            {
                 Result.failure(e)
             }
         }
     }
 
     suspend fun logout(): Result<Unit> {
-        return withContext(Dispatchers.IO) {
-            try {
+
+        return withContext(Dispatchers.IO)
+        {
+            try
+            {
                 val token = tokenManager.getAccessToken() ?: return@withContext Result.failure(Exception("No access token"))
                 val response = ApiClient.authService.logout("Bearer $token")
 
-                if (response.isSuccessful) {
+                if (response.isSuccessful)
+                {
                     // Clear tokens after successful logout
                     tokenManager.clearTokens()
                     Result.success(Unit)
-                } else {
+                }
+                else
+                {
                     Result.failure(Exception("Logout failed: ${response.code()}"))
                 }
-            } catch (e: Exception) {
+            }
+            catch (e: Exception)
+            {
                 // Clear tokens even if request fails
                 tokenManager.clearTokens()
                 Result.failure(e)
@@ -61,15 +85,23 @@ class ProfileRepository(private val tokenManager: TokenManager) {
     }
 
     suspend fun getHabits(): Result<List<HabitResponseDto>> {
-        return withContext(Dispatchers.IO) {
-            try {
+
+        return withContext(Dispatchers.IO)
+        {
+            try
+            {
                 val response = ApiClient.profileService.getHabits()
-                if (response.isSuccessful && response.body() != null) {
+                if (response.isSuccessful && response.body() != null)
+                {
                     Result.success(response.body()!!)
-                } else {
+                }
+                else
+                {
                     Result.failure(Exception("Failed to fetch habits: ${response.code()}"))
                 }
-            } catch (e: Exception) {
+            }
+            catch (e: Exception)
+            {
                 Result.failure(e)
             }
         }
