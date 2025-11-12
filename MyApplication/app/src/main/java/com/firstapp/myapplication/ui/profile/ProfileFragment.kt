@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
@@ -17,6 +18,7 @@ import com.firstapp.myapplication.auth.LoginActivity
 import com.firstapp.myapplication.databinding.FragmentProfileBinding
 import com.firstapp.myapplication.repository.ProfileRepository
 import kotlinx.coroutines.launch
+import com.bumptech.glide.signature.ObjectKey
 
 class ProfileFragment : Fragment() {
     private var _binding: FragmentProfileBinding? = null
@@ -25,6 +27,7 @@ class ProfileFragment : Fragment() {
     private lateinit var tokenManager: TokenManager
     private lateinit var profileRepository: ProfileRepository
     private lateinit var habitAdapter: HabitAdapter
+    private lateinit var sharedViewModel: SharedProfileViewModel
 
     private var currentUserId: Int? = null
 
@@ -41,9 +44,18 @@ class ProfileFragment : Fragment() {
 
         tokenManager = TokenManager(requireContext())
         profileRepository = ProfileRepository(tokenManager)
+        sharedViewModel = ViewModelProvider(requireActivity()).get(SharedProfileViewModel::class.java)
 
         setupRecyclerView()
         setupClickListeners()
+
+        // Observe ViewModel for profile image updates
+        sharedViewModel.profileImageUpdated.observe(viewLifecycleOwner) { cacheBuster ->
+            if (cacheBuster != null && cacheBuster > 0) {
+                refreshProfileImage(cacheBuster)
+            }
+        }
+
         loadUserProfile()
         loadUserHabits()
     }
@@ -97,6 +109,29 @@ class ProfileFragment : Fragment() {
                 }
             } catch (e: Exception) {
                 showToast("Error: ${e.message}")
+            }
+        }
+    }
+
+    private fun refreshProfileImage(cacheBuster: Long) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                val result = profileRepository.getCurrentProfile()
+                result.onSuccess { profile ->
+                    if (!profile.profileImageUrl.isNullOrEmpty()) {
+                        Glide.with(requireContext())
+                            .load(profile.profileImageUrl)
+                            .centerCrop()
+                            .signature(ObjectKey(cacheBuster))
+                            .into(binding.profileImage)
+                        showToast("Profile picture updated!")
+                    }
+                }
+                result.onFailure { error ->
+                    showToast("Failed to refresh profile: ${error.message}")
+                }
+            } catch (e: Exception) {
+                showToast("Error refreshing profile: ${e.message}")
             }
         }
     }

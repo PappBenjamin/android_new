@@ -41,7 +41,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
-        android:text="Track your progress, achieve your goals!\nYour journey to success starts here."
+        android:text="Track your progress, achieve your goals!\n"
         android:textAlignment="center"
         android:textColor="@android:color/white"
         android:textSize="16sp"

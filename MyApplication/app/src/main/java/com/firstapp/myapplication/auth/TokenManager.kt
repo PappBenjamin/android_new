@@ -5,7 +5,7 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
-class TokenManager(context: Context) {
+class  TokenManager(context: Context) {
     
     companion object {
         private const val PREFS_FILE_NAME = "auth_prefs"

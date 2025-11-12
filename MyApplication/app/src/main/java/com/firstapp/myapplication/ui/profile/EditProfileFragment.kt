@@ -9,9 +9,9 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
-import com.firstapp.myapplication.R
 import com.firstapp.myapplication.auth.TokenManager
 import com.firstapp.myapplication.databinding.FragmentEditProfileBinding
 import com.firstapp.myapplication.repository.ProfileRepository
@@ -27,6 +27,7 @@ class EditProfileFragment : Fragment() {
 
     private lateinit var tokenManager: TokenManager
     private lateinit var profileRepository: ProfileRepository
+    private lateinit var sharedViewModel: SharedProfileViewModel
     private var selectedImageUri: Uri? = null
 
     private val pickImageLauncher = registerForActivityResult(
@@ -52,14 +53,13 @@ class EditProfileFragment : Fragment() {
 
         tokenManager = TokenManager(requireContext())
         profileRepository = ProfileRepository(tokenManager)
+        sharedViewModel = ViewModelProvider(requireActivity()).get(SharedProfileViewModel::class.java)
 
         setupClickListeners()
         loadCurrentProfile()
     }
 
     private fun setupClickListeners() {
-
-
         binding.changeImageBtn.setOnClickListener {
             pickImageLauncher.launch("image/*")
         }
@@ -154,6 +154,11 @@ class EditProfileFragment : Fragment() {
                 result.onSuccess {
                     showToast("Profile image uploaded successfully")
                     tempFile.delete()
+
+                    // Notify ProfileFragment using ViewModel with cache-buster timestamp
+                    val cacheBuster = System.currentTimeMillis()
+                    sharedViewModel.notifyImageUpdated(cacheBuster)
+
                     findNavController().popBackStack()
                 }
                 result.onFailure { error ->

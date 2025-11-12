@@ -26,6 +26,7 @@ class EditScheduleFragment : Fragment() {
     private lateinit var scheduleRepository: ScheduleRepository
     private var currentSchedule: com.firstapp.myapplication.network.dto.ScheduleResponseDto? = null
 
+    // setup view
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -34,6 +35,7 @@ class EditScheduleFragment : Fragment() {
         return binding.root
     }
 
+    // Initialize components and load existing schedule data
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 

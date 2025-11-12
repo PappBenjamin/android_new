@@ -19,7 +19,6 @@ import kotlinx.coroutines.launch
 class AddHabitFragment : Fragment() {
     private var _binding: FragmentAddHabitBinding? = null
     private val binding get() = _binding!!
-
     private lateinit var tokenManager: TokenManager
     private lateinit var profileRepository: ProfileRepository
     private var selectedCategoryId: Int? = null
