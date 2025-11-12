@@ -4,58 +4,94 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1E1E2E"
+    android:background="#0F0F1E"
     tools:context=".ui.home.HomeFragment">
 
-    <!-- Header -->
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
-        android:text="Today's plan"
-        android:textColor="#F8FAFC"
-        android:textSize="28sp"
-        android:textStyle="bold"
+    <!-- Date with Navigation Buttons -->
+    <LinearLayout
+        android:id="@+id/dateNavigation"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="30dp"
+        android:layout_marginHorizontal="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="8dp"
+        android:background="@drawable/header_background"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <TextView
-        android:id="@+id/tvCurrentDate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text="Monday, Jul 10"
-        android:textColor="#94A3B8"
-        android:textSize="16sp"
-        app:layout_constraintStart_toStartOf="@id/tvTitle"
-        app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+        <!-- Previous Day Button -->
+        <Button
+            android:id="@+id/btnPreviousDay"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/button_nav"
+            android:contentDescription="Previous day"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="‹"
+            android:textColor="#06B6D4"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+
+
+        <!-- Current Date -->
+        <TextView
+            android:id="@+id/tvCurrentDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Monday, Jul 10"
+            android:textAlignment="center"
+            android:textColor="#06B6D4"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <!-- Next Day Button -->
+        <Button
+            android:id="@+id/btnNextDay"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/button_nav"
+            android:contentDescription="Next day"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="›"
+            android:textColor="#06B6D4"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
 
     <!-- Schedule List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvSchedules"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="24dp"
-        android:paddingHorizontal="16dp"
+        android:layout_marginTop="8dp"
         android:clipToPadding="false"
-        app:layout_constraintTop_toBottomOf="@id/tvCurrentDate"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/dateNavigation"
         tools:listitem="@layout/item_schedule" />
 
     <!-- Add Schedule FAB -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddSchedule"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="24dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
         android:src="@drawable/ic_add"
         app:backgroundTint="#06B6D4"
         app:tint="@android:color/white"
+        app:elevation="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
 

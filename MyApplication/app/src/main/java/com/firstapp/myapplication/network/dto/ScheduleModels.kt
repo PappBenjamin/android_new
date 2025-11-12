@@ -60,20 +60,17 @@ data class CreateCustomScheduleRequest(
 )
 
 data class CreateRecurringScheduleRequest(
+    @SerializedName("habitId")
     val habitId: Int,
     @SerializedName("start_time")
     val startTime: String,
-    @SerializedName("repeat_pattern")
+    @SerializedName("repeatPattern")
     val repeatPattern: String, // "none", "daily", "weekdays", "weekends"
     @SerializedName("is_custom")
-    val isCustom: Boolean = true,
+    val isCustom: Boolean = false,
     @SerializedName("end_time")
     val endTime: String? = null,
-    @SerializedName("duration_minutes")
-    val durationMinutes: Int? = null,
-    @SerializedName("repeat_days")
-    val repeatDays: Int = 30,
-    @SerializedName("participantIds")
+    @SerializedName("participant_ids")
     val participantIds: List<Int>? = null,
     val notes: String? = null
 )

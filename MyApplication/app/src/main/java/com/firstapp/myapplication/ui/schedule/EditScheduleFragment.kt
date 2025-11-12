@@ -9,22 +9,15 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import android.text.Editable
 import android.text.TextWatcher
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import com.firstapp.myapplication.auth.TokenManager
 import com.firstapp.myapplication.databinding.FragmentEditScheduleBinding
-import com.firstapp.myapplication.repository.ScheduleRepository
-import java.time.LocalTime
-import java.time.Duration
-import kotlinx.coroutines.launch
 
 class EditScheduleFragment : Fragment() {
     private var _binding: FragmentEditScheduleBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var tokenManager: TokenManager
-    private lateinit var scheduleRepository: ScheduleRepository
-    private var currentSchedule: com.firstapp.myapplication.network.dto.ScheduleResponseDto? = null
+    private lateinit var viewModel: EditScheduleViewModel
 
     // setup view
     override fun onCreateView(
@@ -39,17 +32,21 @@ class EditScheduleFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        tokenManager = TokenManager(requireContext())
-        scheduleRepository = ScheduleRepository(tokenManager)
+        viewModel = ViewModelProvider(this, EditScheduleViewModelFactory(requireContext()))
+            .get(EditScheduleViewModel::class.java)
 
         setupSpinner()
         setupClickListeners()
-        loadScheduleData()
+        observeViewModel()
+
+        val scheduleId = arguments?.getInt("scheduleId") ?: return
+        viewModel.loadScheduleData(scheduleId)
     }
 
     private fun setupClickListeners() {
         binding.saveBtn.setOnClickListener {
-            updateSchedule()
+            val scheduleId = arguments?.getInt("scheduleId") ?: return@setOnClickListener
+            viewModel.updateSchedule(scheduleId)
         }
 
         binding.cancelBtn.setOnClickListener {
@@ -57,11 +54,19 @@ class EditScheduleFragment : Fragment() {
         }
 
         binding.startTimeInput.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) showCalculatedDuration()
+            if (!hasFocus) {
+                val startTime = binding.startTimeInput.text.toString()
+                val endTime = binding.endTimeInput.text.toString()
+                viewModel.calculateDuration(startTime, endTime)
+            }
         }
 
         binding.endTimeInput.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) showCalculatedDuration()
+            if (!hasFocus) {
+                val startTime = binding.startTimeInput.text.toString()
+                val endTime = binding.endTimeInput.text.toString()
+                viewModel.calculateDuration(startTime, endTime)
+            }
         }
 
         // Setup time input formatting (HHMM to HH:mm)
@@ -117,127 +122,75 @@ class EditScheduleFragment : Fragment() {
         binding.statusSpinner.adapter = adapter
     }
 
-    private fun loadScheduleData() {
-        val scheduleId = arguments?.getInt("scheduleId") ?: return
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val result = scheduleRepository.getScheduleById(scheduleId)
-                result.onSuccess { schedule ->
-                    currentSchedule = schedule // Store the current schedule
-                    displayScheduleData(schedule)
-                }
-                result.onFailure { error ->
-                    showToast("Failed to load schedule: ${error.message}")
-                }
-            } catch (e: Exception) {
-                showToast("Error: ${e.message}")
-            }
-        }
-    }
-
-    private fun displayScheduleData(schedule: com.firstapp.myapplication.network.dto.ScheduleResponseDto) {
-        binding.apply {
-            startTimeInput.setText(parseTimeFromIso(schedule.startTime) ?: "")
-            endTimeInput.setText(parseTimeFromIso(schedule.endTime) ?: "")
-            statusSpinner.setSelection(
-                listOf("Planned", "Completed", "Skipped").indexOf(schedule.status)
-            )
-            notesInput.setText(schedule.notes ?: "")
-            participantsInput.setText(schedule.participantIds?.joinToString(", ") ?: "")
-        }
-    }
-
-    private fun updateSchedule() {
-        val scheduleId = arguments?.getInt("scheduleId") ?: return
-        val startTime = binding.startTimeInput.text.toString().trim()
-        val endTime = binding.endTimeInput.text.toString().trim()
-        val status = binding.statusSpinner.selectedItem.toString()
-        val notes = binding.notesInput.text.toString().trim()
-        val participants = binding.participantsInput.text.toString().trim()
-        val participantIds = if (participants.isNotEmpty()) participants.split(",").mapNotNull { it.trim().toIntOrNull() } else null
-        val durationMinutes = calculateDuration(startTime, endTime)
-        val date = currentSchedule?.date
-        val datePart = date?.split("T")?.get(0) ?: ""
-
-        if (startTime.isEmpty() || endTime.isEmpty()) {
-            showToast("Please enter start time and end time")
-            return
-        }
-
-        if (endTime.isNotEmpty() && durationMinutes == null) {
-            showToast("Invalid time format. Please use HH:mm")
-            return
-        }
-
-//        showToast("Calculated duration: $durationMinutes minutes")
-
-        val startIso = if (startTime.isNotEmpty() && datePart.isNotEmpty()) "${datePart}T${startTime}:00.000Z" else startTime
-        val endIso = if (endTime.isNotEmpty() && datePart.isNotEmpty()) "${datePart}T${endTime}:00.000Z" else endTime.ifEmpty { null }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val result = scheduleRepository.updateSchedule(
-                    scheduleId = scheduleId,
-                    startTime = startIso,
-                    endTime = endIso,
-                    durationMinutes = durationMinutes,
-                    status = status,
-                    date = date,
-                    notes = notes.ifEmpty { null },
-                    participantIds = participantIds
+    private fun observeViewModel() {
+        // Observe schedule details
+        viewModel.currentSchedule.observe(viewLifecycleOwner) { schedule ->
+            if (schedule != null) {
+                binding.startTimeInput.setText(schedule.startTime.substring(11, 16))
+                binding.endTimeInput.setText(schedule.endTime?.substring(11, 16) ?: "")
+                binding.statusSpinner.setSelection(
+                    listOf("Planned", "Completed", "Skipped").indexOf(schedule.status)
                 )
-
-                result.onSuccess {
-                    showToast("Schedule updated successfully")
-                    findNavController().popBackStack()
-                }
-
-                result.onFailure { error ->
-                    showToast("Failed to update schedule: ${error.message}")
-                }
-            } catch (e: Exception) {
-                showToast("Error: ${e.message}")
+                binding.notesInput.setText(schedule.notes ?: "")
+                binding.participantsInput.setText(schedule.participantIds?.joinToString(", ") ?: "")
             }
         }
-    }
 
-    private fun calculateDuration(start: String, end: String): Int? {
-        if (end.isEmpty()) return null
-        return try {
-            val startTime = LocalTime.parse(start)
-            val endTime = LocalTime.parse(end)
-            Duration.between(startTime, endTime).toMinutes().toInt()
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun showCalculatedDuration() {
-        val startTime = binding.startTimeInput.text.toString().trim()
-        val endTime = binding.endTimeInput.text.toString().trim()
-
-        if (startTime.isEmpty() || endTime.isEmpty()) {
-            return
+        // Observe start time
+        viewModel.startTime.observe(viewLifecycleOwner) { startTime ->
+            if (binding.startTimeInput.text.toString() != startTime) {
+                binding.startTimeInput.setText(startTime)
+            }
         }
 
-        val duration = calculateDuration(startTime, endTime)
-
-        if (duration != null) {
-            showToast("Current duration: $duration minutes")
+        // Observe end time
+        viewModel.endTime.observe(viewLifecycleOwner) { endTime ->
+            if (binding.endTimeInput.text.toString() != endTime) {
+                binding.endTimeInput.setText(endTime)
+            }
         }
-        else
-        {
-            showToast("Invalid time format")
-        }
-    }
 
-    private fun parseTimeFromIso(iso: String?): String? {
-        if (iso.isNullOrEmpty()) return null
-        return try {
-            val timePart = iso.split("T")[1].split(":")
-            "${timePart[0]}:${timePart[1]}"
-        } catch (e: Exception) {
-            null
+        // Observe status
+        viewModel.status.observe(viewLifecycleOwner) { status ->
+            binding.statusSpinner.setSelection(
+                listOf("Planned", "Completed", "Skipped").indexOf(status)
+            )
+        }
+
+        // Observe notes
+        viewModel.notes.observe(viewLifecycleOwner) { notes ->
+            if (binding.notesInput.text.toString() != notes) {
+                binding.notesInput.setText(notes)
+            }
+        }
+
+        // Observe participants
+        viewModel.participants.observe(viewLifecycleOwner) { participants ->
+            if (binding.participantsInput.text.toString() != participants) {
+                binding.participantsInput.setText(participants)
+            }
+        }
+
+        // Observe toast messages
+        viewModel.toastMessage.observe(viewLifecycleOwner) { message ->
+            if (message != null) {
+                showToast(message)
+                viewModel.clearToastMessage()
+            }
+        }
+
+        // Observe navigation back
+        viewModel.navigateBack.observe(viewLifecycleOwner) { shouldNavigate ->
+            if (shouldNavigate) {
+                findNavController().popBackStack()
+                viewModel.clearNavigateBack()
+            }
+        }
+
+        // Observe loading state
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            binding.saveBtn.isEnabled = !isLoading
+            binding.cancelBtn.isEnabled = !isLoading
         }
     }
 

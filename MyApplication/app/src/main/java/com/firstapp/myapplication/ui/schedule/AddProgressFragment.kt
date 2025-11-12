@@ -6,21 +6,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import com.firstapp.myapplication.auth.TokenManager
 import com.firstapp.myapplication.databinding.FragmentAddProgressBinding
-import com.firstapp.myapplication.repository.ScheduleRepository
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
 
 class AddProgressFragment : Fragment() {
     private var _binding: FragmentAddProgressBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var tokenManager: TokenManager
-    private lateinit var scheduleRepository: ScheduleRepository
+    private lateinit var viewModel: AddProgressViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -33,62 +27,69 @@ class AddProgressFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        tokenManager = TokenManager(requireContext())
-        scheduleRepository = ScheduleRepository(tokenManager)
+        viewModel = ViewModelProvider(this, AddProgressViewModelFactory(requireContext()))
+            .get(AddProgressViewModel::class.java)
 
         setupUI()
         setupClickListeners()
+        observeViewModel()
     }
 
     private fun setupUI() {
-        // Set today's date as default
-        val todayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-        binding.dateInput.setText(todayDate)
+        // Date input will be set by ViewModel
     }
 
     private fun setupClickListeners() {
         binding.saveBtn.setOnClickListener {
-            addProgress()
+            val scheduleId = arguments?.getInt("scheduleId") ?: return@setOnClickListener
+            val date = binding.dateInput.text.toString()
+            viewModel.addProgress(scheduleId, date)
         }
 
         binding.cancelBtn.setOnClickListener {
             findNavController().popBackStack()
         }
-    }
 
-    private fun addProgress() {
-        val scheduleId = arguments?.getInt("scheduleId") ?: return
-        val date = binding.dateInput.text.toString().trim()
-        val loggedTimeStr = binding.loggedTimeInput.text.toString().trim()
-        val notes = binding.notesInput.text.toString().trim()
-        val isCompleted = binding.completedCheckbox.isChecked
-
-        if (date.isEmpty()) {
-            showToast("Please enter a date")
-            return
+        // Observe input changes
+        binding.loggedTimeInput.setOnFocusChangeListener { _, _ ->
+            viewModel.setLoggedTime(binding.loggedTimeInput.text.toString())
         }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val result = scheduleRepository.createProgress(
-                    scheduleId = scheduleId,
-                    date = date,
-                    loggedTime = loggedTimeStr.toIntOrNull(),
-                    notes = notes.ifEmpty { null },
-                    isCompleted = isCompleted
-                )
+        binding.notesInput.setOnFocusChangeListener { _, _ ->
+            viewModel.setNotes(binding.notesInput.text.toString())
+        }
 
-                result.onSuccess {
-                    showToast("Progress added successfully")
-                    findNavController().popBackStack()
-                }
+        binding.completedCheckbox.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.setIsCompleted(isChecked)
+        }
+    }
 
-                result.onFailure { error ->
-                    showToast("Failed to add progress: ${error.message}")
-                }
-            } catch (e: Exception) {
-                showToast("Error: ${e.message}")
+    private fun observeViewModel() {
+        // Observe today's date
+        viewModel.todayDate.observe(viewLifecycleOwner) { todayDate ->
+            binding.dateInput.setText(todayDate)
+        }
+
+        // Observe toast messages
+        viewModel.toastMessage.observe(viewLifecycleOwner) { message ->
+            if (message != null) {
+                showToast(message)
+                viewModel.clearToastMessage()
             }
+        }
+
+        // Observe navigation back
+        viewModel.navigateBack.observe(viewLifecycleOwner) { shouldNavigate ->
+            if (shouldNavigate) {
+                findNavController().popBackStack()
+                viewModel.clearNavigateBack()
+            }
+        }
+
+        // Observe loading state
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            binding.saveBtn.isEnabled = !isLoading
+            binding.cancelBtn.isEnabled = !isLoading
         }
     }
 

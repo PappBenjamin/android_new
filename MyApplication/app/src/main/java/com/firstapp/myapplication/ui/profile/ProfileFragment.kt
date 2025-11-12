@@ -7,29 +7,22 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.bumptech.glide.signature.ObjectKey
 import com.firstapp.myapplication.R
-import com.firstapp.myapplication.auth.TokenManager
 import com.firstapp.myapplication.auth.LoginActivity
 import com.firstapp.myapplication.databinding.FragmentProfileBinding
-import com.firstapp.myapplication.repository.ProfileRepository
-import kotlinx.coroutines.launch
-import com.bumptech.glide.signature.ObjectKey
 
 class ProfileFragment : Fragment() {
     private var _binding: FragmentProfileBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var tokenManager: TokenManager
-    private lateinit var profileRepository: ProfileRepository
+    private lateinit var viewModel: ProfileViewModel
     private lateinit var habitAdapter: HabitAdapter
     private lateinit var sharedViewModel: SharedProfileViewModel
-
-    private var currentUserId: Int? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -42,29 +35,29 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        tokenManager = TokenManager(requireContext())
-        profileRepository = ProfileRepository(tokenManager)
+        viewModel = ViewModelProvider(this, ProfileViewModelFactory(requireContext()))
+            .get(ProfileViewModel::class.java)
         sharedViewModel = ViewModelProvider(requireActivity()).get(SharedProfileViewModel::class.java)
 
         setupRecyclerView()
         setupClickListeners()
+        observeViewModel()
 
         // Observe ViewModel for profile image updates
         sharedViewModel.profileImageUpdated.observe(viewLifecycleOwner) { cacheBuster ->
             if (cacheBuster != null && cacheBuster > 0) {
-                refreshProfileImage(cacheBuster)
+                clearGlideCaches()
+                viewModel.refreshProfileImage(cacheBuster)
             }
         }
 
-        loadUserProfile()
-        loadUserHabits()
+        viewModel.loadUserProfile()
+        viewModel.loadUserHabits()
     }
 
     private fun setupRecyclerView() {
         habitAdapter = HabitAdapter { habit ->
-            // Navigate to Add Habit screen with pre-filled habit
             showToast("Viewing habit: ${habit.name}")
-            // TODO: Navigate to HabitDetailsFragment if created
         }
 
         binding.habitsRecyclerView.apply {
@@ -75,11 +68,11 @@ class ProfileFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.addHabitBtn.setOnClickListener {
-            navigateToAddHabit()
+            viewModel.navigateToAddHabit()
         }
 
         binding.editProfileBtn.setOnClickListener {
-            navigateToEditProfile()
+            viewModel.navigateToEditProfile()
         }
 
         binding.logoutBtn.setOnClickListener {
@@ -87,88 +80,88 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun loadUserProfile() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val result = profileRepository.getCurrentProfile()
-                result.onSuccess { profile ->
-                    currentUserId = profile.id
-                    binding.nameText.text = profile.username
-                    binding.emailText.text = profile.email
+    private fun observeViewModel() {
+        // Observe username
+        viewModel.username.observe(viewLifecycleOwner) { username ->
+            binding.nameText.text = username
+        }
 
-                    // Load profile image if available
-                    if (!profile.profileImageUrl.isNullOrEmpty()) {
-                        Glide.with(requireContext())
-                            .load(profile.profileImageUrl)
-                            .centerCrop()
-                            .into(binding.profileImage)
-                    }
-                }
-                result.onFailure { error ->
-                    showToast("Failed to load profile: ${error.message}")
-                }
-            } catch (e: Exception) {
-                showToast("Error: ${e.message}")
+        // Observe email
+        viewModel.email.observe(viewLifecycleOwner) { email ->
+            binding.emailText.text = email
+        }
+
+        // Observe profile image URL
+        viewModel.profileImageUrl.observe(viewLifecycleOwner) { imageUrl ->
+            if (!imageUrl.isNullOrEmpty()) {
+                Glide.with(requireContext())
+                    .load(imageUrl)
+                    .centerCrop()
+                    .into(binding.profileImage)
             }
         }
-    }
 
-    private fun refreshProfileImage(cacheBuster: Long) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val result = profileRepository.getCurrentProfile()
-                result.onSuccess { profile ->
-                    if (!profile.profileImageUrl.isNullOrEmpty()) {
-                        Glide.with(requireContext())
-                            .load(profile.profileImageUrl)
-                            .centerCrop()
-                            .signature(ObjectKey(cacheBuster))
-                            .into(binding.profileImage)
-                        showToast("Profile picture updated!")
-                    }
-                }
-                result.onFailure { error ->
-                    showToast("Failed to refresh profile: ${error.message}")
-                }
-            } catch (e: Exception) {
-                showToast("Error refreshing profile: ${e.message}")
+        // Observe habits
+        viewModel.habits.observe(viewLifecycleOwner) { habits ->
+            habitAdapter.updateHabits(habits)
+        }
+
+        // Observe image update cache buster
+        viewModel.imageUpdateCacheBuster.observe(viewLifecycleOwner) { cacheBuster ->
+            if (cacheBuster != null && cacheBuster > 0) {
+                Glide.with(requireContext())
+                    .load(viewModel.profileImageUrl.value)
+                    .centerCrop()
+                    .signature(ObjectKey(cacheBuster))
+                    .into(binding.profileImage)
             }
         }
-    }
 
-    private fun loadUserHabits() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val result = profileRepository.getHabits()
-                result.onSuccess { habits ->
-                    if (habits.isEmpty()) {
-                        showToast("No habits yet")
-                    } else {
-                        habitAdapter.updateHabits(habits)
-                    }
-                }
-                result.onFailure { error ->
-                    showToast("Failed to load habits: ${error.message}")
-                }
-            } catch (e: Exception) {
-                showToast("Error loading habits: ${e.message}")
+        // Observe toast messages
+        viewModel.toastMessage.observe(viewLifecycleOwner) { message ->
+            if (message != null) {
+                showToast(message)
+                viewModel.clearToastMessage()
             }
         }
-    }
 
-    private fun navigateToAddHabit() {
-        try {
-            findNavController().navigate(R.id.addHabitFragment)
-        } catch (e: Exception) {
-            showToast("Navigation to Add Habit failed: ${e.message}")
+        // Observe navigation to Add Habit
+        viewModel.navigateToAddHabit.observe(viewLifecycleOwner) { shouldNavigate ->
+            if (shouldNavigate) {
+                try {
+                    findNavController().navigate(R.id.addHabitFragment)
+                } catch (e: Exception) {
+                    showToast("Navigation to Add Habit failed: ${e.message}")
+                }
+                viewModel.clearNavigationFlags()
+            }
         }
-    }
 
-    private fun navigateToEditProfile() {
-        try {
-            findNavController().navigate(R.id.editProfileFragment)
-        } catch (e: Exception) {
-            showToast("Navigation to edit profile failed: ${e.message}")
+        // Observe navigation to Edit Profile
+        viewModel.navigateToEditProfile.observe(viewLifecycleOwner) { shouldNavigate ->
+            if (shouldNavigate) {
+                try {
+                    findNavController().navigate(R.id.editProfileFragment)
+                } catch (e: Exception) {
+                    showToast("Navigation to edit profile failed: ${e.message}")
+                }
+                viewModel.clearNavigationFlags()
+            }
+        }
+
+        // Observe navigation to Login
+        viewModel.navigateToLogin.observe(viewLifecycleOwner) { shouldNavigate ->
+            if (shouldNavigate) {
+                navigateToLogin()
+                viewModel.clearNavigationFlags()
+            }
+        }
+
+        // Observe loading state
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            binding.addHabitBtn.isEnabled = !isLoading
+            binding.editProfileBtn.isEnabled = !isLoading
+            binding.logoutBtn.isEnabled = !isLoading
         }
     }
 
@@ -177,29 +170,10 @@ class ProfileFragment : Fragment() {
             .setTitle("Logout")
             .setMessage("Are you sure you want to logout?")
             .setPositiveButton("Yes") { _, _ ->
-                performLogout()
+                viewModel.performLogout()
             }
             .setNegativeButton("No", null)
             .show()
-    }
-
-    private fun performLogout() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val result = profileRepository.logout()
-                result.onSuccess {
-                    showToast("Logged out successfully")
-                    navigateToLogin()
-                }
-                result.onFailure { error ->
-                    showToast("Logout failed: ${error.message}")
-                    navigateToLogin()
-                }
-            } catch (e: Exception) {
-                showToast("Error during logout: ${e.message}")
-                navigateToLogin()
-            }
-        }
     }
 
     private fun navigateToLogin() {
@@ -215,6 +189,21 @@ class ProfileFragment : Fragment() {
 
     private fun showToast(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun clearGlideCaches() {
+        try {
+            Glide.get(requireContext()).clearMemory()
+            Thread {
+                try {
+                    Glide.get(requireContext()).clearDiskCache()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }.start()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     override fun onDestroyView() {

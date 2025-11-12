@@ -6,24 +6,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.firstapp.myapplication.R
-import com.firstapp.myapplication.auth.TokenManager
 import com.firstapp.myapplication.databinding.FragmentHomeBinding
-import com.firstapp.myapplication.repository.ScheduleRepository
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
 
 class HomeFragment : Fragment() {
     
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     
-    private lateinit var tokenManager: TokenManager
-    private lateinit var scheduleRepository: ScheduleRepository
+    private lateinit var viewModel: HomeViewModel
     private lateinit var scheduleAdapter: ScheduleAdapter
 
     override fun onCreateView(
@@ -37,21 +31,17 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        tokenManager = TokenManager(requireContext())
-        scheduleRepository = ScheduleRepository(tokenManager)
+        viewModel = ViewModelProvider(this, HomeViewModelFactory(requireContext()))
+            .get(HomeViewModel::class.java)
 
         setupUI()
-        loadScheduleData()
+        observeViewModel()
+        viewModel.loadScheduleData()
     }
     
     private fun setupUI() {
-        // Set current date
-        val currentDate = SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(Date())
-        binding.tvCurrentDate.text = currentDate
-        
-        // Setup RecyclerView
         scheduleAdapter = ScheduleAdapter { scheduleId ->
-            onScheduleItemClick(scheduleId)
+            viewModel.onScheduleItemClick(scheduleId)
         }
         
         binding.rvSchedules.apply {
@@ -59,45 +49,69 @@ class HomeFragment : Fragment() {
             adapter = scheduleAdapter
         }
         
-        // Add Schedule FAB click - Navigate to AddScheduleFragment
         binding.fabAddSchedule.setOnClickListener {
-            try {
-                findNavController().navigate(R.id.addScheduleFragment)
-            } catch (e: Exception) {
-                showToast("Navigation to Add Schedule failed: ${e.message}")
-            }
+            viewModel.navigateToAddSchedule()
         }
-    }
-    
-    private fun loadScheduleData() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val result = scheduleRepository.getSchedulesByDay()
-                result.onSuccess { schedules ->
-                    if (schedules.isEmpty()) {
-                        showToast("No schedules for today")
-                        scheduleAdapter.submitList(emptyList())
-                    } else {
-                        scheduleAdapter.submitList(schedules)
-                    }
-                }
-                result.onFailure { error ->
-                    showToast("Failed to load schedules: ${error.message}")
-                }
-            } catch (e: Exception) {
-                showToast("Error: ${e.message}")
-            }
+
+        // Add navigation buttons for day navigation
+        binding.btnPreviousDay.setOnClickListener {
+            viewModel.previousDay()
+        }
+
+        binding.btnNextDay.setOnClickListener {
+            viewModel.nextDay()
         }
     }
 
-    private fun onScheduleItemClick(scheduleId: Int) {
-        val bundle = android.os.Bundle().apply {
-            putInt("scheduleId", scheduleId)
+    private fun observeViewModel() {
+        // Observe current date
+        viewModel.currentDate.observe(viewLifecycleOwner) { currentDate ->
+            binding.tvCurrentDate.text = currentDate
         }
-        try {
-            findNavController().navigate(R.id.scheduleDetailsFragment, bundle)
-        } catch (e: Exception) {
-            showToast("Navigation to schedule details failed: ${e.message}")
+
+        // Observe schedules
+        viewModel.schedules.observe(viewLifecycleOwner) { schedules ->
+            scheduleAdapter.submitList(schedules)
+        }
+
+        // Observe toast messages
+        viewModel.toastMessage.observe(viewLifecycleOwner) { message ->
+            if (message != null) {
+                showToast(message)
+                viewModel.clearToastMessage()
+            }
+        }
+
+        // Observe navigation to Add Schedule
+        viewModel.navigateToAddSchedule.observe(viewLifecycleOwner) { shouldNavigate ->
+            if (shouldNavigate) {
+                try {
+                    findNavController().navigate(R.id.addScheduleFragment)
+                } catch (e: Exception) {
+                    showToast("Navigation to Add Schedule failed: ${e.message}")
+                }
+                viewModel.clearNavigationFlags()
+            }
+        }
+
+        // Observe navigation to Schedule Details
+        viewModel.navigateToScheduleDetails.observe(viewLifecycleOwner) { scheduleId ->
+            if (scheduleId != null) {
+                val bundle = Bundle().apply {
+                    putInt("scheduleId", scheduleId)
+                }
+                try {
+                    findNavController().navigate(R.id.scheduleDetailsFragment, bundle)
+                } catch (e: Exception) {
+                    showToast("Navigation to schedule details failed: ${e.message}")
+                }
+                viewModel.clearNavigationFlags()
+            }
+        }
+
+        // Observe loading state
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            binding.fabAddSchedule.isEnabled = !isLoading
         }
     }
     

@@ -77,20 +77,32 @@ class ScheduleRepository(private val tokenManager: TokenManager) {
         repeatPattern: String,
         endTime: String? = null,
         durationMinutes: Int? = null,
-        repeatDays: Int = 30,
         participantIds: List<Int>? = null,
         notes: String? = null
     ): Result<List<ScheduleResponseDto>> {
         return withContext(Dispatchers.IO) {
             try {
+                // Convert HH:mm format to ISO 8601 format with tomorrow's date
+                val tomorrowDate = java.time.LocalDate.now().plusDays(1).toString() // Format: YYYY-MM-DD
+
+                val formattedStartTime = if (startTime.matches(Regex("\\d{2}:\\d{2}$"))) {
+                    "${tomorrowDate}T${startTime}:00Z"
+                } else {
+                    startTime
+                }
+
+                val formattedEndTime = if (endTime != null && endTime.matches(Regex("\\d{2}:\\d{2}$"))) {
+                    "${tomorrowDate}T${endTime}:00Z"
+                } else {
+                    endTime
+                }
+
                 val request = CreateRecurringScheduleRequest(
                     habitId = habitId,
-                    startTime = startTime,
+                    startTime = formattedStartTime,
                     repeatPattern = repeatPattern,
-                    isCustom = true,
-                    endTime = endTime,
-                    durationMinutes = durationMinutes,
-                    repeatDays = repeatDays,
+                    isCustom = false,
+                    endTime = formattedEndTime,
                     participantIds = participantIds,
                     notes = notes
                 )
@@ -217,4 +229,3 @@ class ScheduleRepository(private val tokenManager: TokenManager) {
         }
     }
 }
-

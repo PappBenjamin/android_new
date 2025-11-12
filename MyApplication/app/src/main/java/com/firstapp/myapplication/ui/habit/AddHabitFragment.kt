@@ -8,21 +8,15 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
-import com.firstapp.myapplication.auth.TokenManager
 import com.firstapp.myapplication.databinding.FragmentAddHabitBinding
-import com.firstapp.myapplication.network.dto.HabitCategoryDto
-import com.firstapp.myapplication.repository.ProfileRepository
-import kotlinx.coroutines.launch
 
 class AddHabitFragment : Fragment() {
     private var _binding: FragmentAddHabitBinding? = null
     private val binding get() = _binding!!
-    private lateinit var tokenManager: TokenManager
-    private lateinit var profileRepository: ProfileRepository
-    private var selectedCategoryId: Int? = null
-    private var categories: List<HabitCategoryDto> = emptyList()
+
+    private lateinit var viewModel: AddHabitViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -35,16 +29,20 @@ class AddHabitFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        tokenManager = TokenManager(requireContext())
-        profileRepository = ProfileRepository(tokenManager)
+        viewModel = ViewModelProvider(this, AddHabitViewModelFactory(requireContext()))
+            .get(AddHabitViewModel::class.java)
 
         setupClickListeners()
-        loadHabitCategories()
+        observeViewModel()
+        viewModel.loadHabitCategories()
     }
 
     private fun setupClickListeners() {
         binding.createBtn.setOnClickListener {
-            createHabit()
+            val name = binding.habitNameInput.text.toString()
+            val description = binding.habitDescriptionInput.text.toString()
+            val goal = binding.habitGoalInput.text.toString()
+            viewModel.createHabit(name, description, goal)
         }
 
         binding.cancelBtn.setOnClickListener {
@@ -52,25 +50,42 @@ class AddHabitFragment : Fragment() {
         }
     }
 
-    private fun loadHabitCategories() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val result = profileRepository.getHabitCategories()
-                result.onSuccess { categoryList ->
-                    categories = categoryList
-                    setupCategorySpinner(categoryList)
-                }
-                result.onFailure { error ->
-                    showToast("Failed to load categories: ${error.message}")
-                }
-            } catch (e: Exception) {
-                showToast("Error loading categories: ${e.message}")
+    private fun observeViewModel() {
+        // Observe categories
+        viewModel.categories.observe(viewLifecycleOwner) { categories ->
+            setupCategorySpinner(categories)
+        }
+
+        // Observe selected category
+        viewModel.selectedCategoryId.observe(viewLifecycleOwner) { categoryId ->
+            // Category selected, ready to create
+        }
+
+        // Observe toast messages
+        viewModel.toastMessage.observe(viewLifecycleOwner) { message ->
+            if (message != null) {
+                showToast(message)
+                viewModel.clearToastMessage()
             }
+        }
+
+        // Observe navigation back
+        viewModel.navigateBack.observe(viewLifecycleOwner) { shouldNavigate ->
+            if (shouldNavigate) {
+                findNavController().popBackStack()
+                viewModel.clearNavigateBack()
+            }
+        }
+
+        // Observe loading state
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            binding.createBtn.isEnabled = !isLoading
+            binding.cancelBtn.isEnabled = !isLoading
         }
     }
 
-    private fun setupCategorySpinner(categoryList: List<HabitCategoryDto>) {
-        val categoryNames = categoryList.map { it.name }
+    private fun setupCategorySpinner(categories: List<com.firstapp.myapplication.network.dto.HabitCategoryDto>) {
+        val categoryNames = categories.map { it.name }
 
         val adapter = ArrayAdapter(
             requireContext(),
@@ -83,51 +98,12 @@ class AddHabitFragment : Fragment() {
         binding.categorySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (position >= 0 && position < categories.size) {
-                    selectedCategoryId = categories[position].id
+                    viewModel.setSelectedCategory(categories[position].id)
                 }
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {
-                selectedCategoryId = null
-            }
-        }
-    }
-
-    private fun createHabit() {
-        val name = binding.habitNameInput.text.toString().trim()
-        val description = binding.habitDescriptionInput.text.toString().trim()
-        val goal = binding.habitGoalInput.text.toString().trim()
-
-        // Validation
-        if (name.isEmpty()) {
-            showToast("Please enter a habit name")
-            return
-        }
-
-        if (selectedCategoryId == null) {
-            showToast("Please select a category")
-            return
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val result = profileRepository.createHabit(
-                    name = name,
-                    description = description.ifEmpty { null },
-                    goal = goal.ifEmpty { null },
-                    categoryId = selectedCategoryId!!
-                )
-
-                result.onSuccess { habit ->
-                    showToast("Habit '${habit.name}' created successfully!")
-                    findNavController().popBackStack()
-                }
-
-                result.onFailure { error ->
-                    showToast("Failed to create habit: ${error.message}")
-                }
-            } catch (e: Exception) {
-                showToast("Error creating habit: ${e.message}")
+                viewModel.setSelectedCategory(0)
             }
         }
     }
