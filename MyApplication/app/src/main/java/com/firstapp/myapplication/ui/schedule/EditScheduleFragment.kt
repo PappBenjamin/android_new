@@ -35,7 +35,6 @@ class EditScheduleFragment : Fragment() {
         viewModel = ViewModelProvider(this, EditScheduleViewModelFactory(requireContext()))
             .get(EditScheduleViewModel::class.java)
 
-        setupSpinner()
         setupClickListeners()
         observeViewModel()
 
@@ -113,13 +112,26 @@ class EditScheduleFragment : Fragment() {
                 isFormatting = false
             }
         })
-    }
 
-    private fun setupSpinner() {
-        val statusOptions = arrayOf("Planned", "Completed", "Skipped")
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, statusOptions)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.statusSpinner.adapter = adapter
+        binding.notesInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                viewModel.updateNotes(s.toString())
+            }
+        })
+
+        binding.participantsInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                viewModel.updateParticipants(s.toString())
+            }
+        })
     }
 
     private fun observeViewModel() {
@@ -128,9 +140,6 @@ class EditScheduleFragment : Fragment() {
             if (schedule != null) {
                 binding.startTimeInput.setText(schedule.startTime.substring(11, 16))
                 binding.endTimeInput.setText(schedule.endTime?.substring(11, 16) ?: "")
-                binding.statusSpinner.setSelection(
-                    listOf("Planned", "Completed", "Skipped").indexOf(schedule.status)
-                )
                 binding.notesInput.setText(schedule.notes ?: "")
                 binding.participantsInput.setText(schedule.participantIds?.joinToString(", ") ?: "")
             }
@@ -148,13 +157,6 @@ class EditScheduleFragment : Fragment() {
             if (binding.endTimeInput.text.toString() != endTime) {
                 binding.endTimeInput.setText(endTime)
             }
-        }
-
-        // Observe status
-        viewModel.status.observe(viewLifecycleOwner) { status ->
-            binding.statusSpinner.setSelection(
-                listOf("Planned", "Completed", "Skipped").indexOf(status)
-            )
         }
 
         // Observe notes
