@@ -75,25 +75,6 @@ class ScheduleAdapter(
                     }
                 }
                 
-                // Set habit color accent
-                schedule.habit?.categoryId?.let { categoryId ->
-                    val colorMap = mapOf(
-                        1 to "#8B5CF6",  // Purple
-                        2 to "#06B6D4",  // Cyan
-                        3 to "#F59E0B",  // Amber
-                        4 to "#10B981"   // Emerald
-                    )
-                    val colorString = colorMap[categoryId] ?: "#8B5CF6"
-                    try {
-                        val color = Color.parseColor(colorString)
-                        viewColorAccent.setBackgroundColor(color)
-                    } catch (e: IllegalArgumentException) {
-                        viewColorAccent.setBackgroundColor(
-                            ContextCompat.getColor(root.context, R.color.purple_500)
-                        )
-                    }
-                }
-                
                 // Set click listener
                 root.setOnClickListener { onItemClick(schedule.id) }
             }

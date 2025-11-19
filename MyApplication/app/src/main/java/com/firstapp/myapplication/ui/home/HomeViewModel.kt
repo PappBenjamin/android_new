@@ -37,7 +37,7 @@ class HomeViewModel(context: Context) : ViewModel() {
     private val _navigateToScheduleDetails = MutableLiveData<Int?>()
     val navigateToScheduleDetails: LiveData<Int?> = _navigateToScheduleDetails
 
-    private var currentDateIndex = 1 // Start from tomorrow (1 day ahead)
+    private var currentDateIndex = 0 // Start from tomorrow (1 day ahead)
 
     init {
         setCurrentDate()
